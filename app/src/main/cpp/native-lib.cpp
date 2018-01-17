@@ -456,15 +456,10 @@ static int parse_interface(struct libusb_interface *usb_interface, unsigned char
   struct usb_descriptor_header header;
   struct libusb_interface_descriptor *ifp;
   unsigned char *begin;
-
-  LOGI("********** beginning size: %d\n\n", size);
-  for (int k = 0; k < size; k++) {
-    LOGE("%d", (int)(buffer[k]));
-  }
-  LOGE("---------------------------------------------\n\n");
   usb_interface->num_altsetting = 0;
 
   while (size >= INTERFACE_DESC_LENGTH) {
+    LOGE("********** size: %d", size);
     struct libusb_interface_descriptor *altsetting =
         (struct libusb_interface_descriptor *) usb_interface->altsetting;
     altsetting = (struct libusb_interface_descriptor *)usbi_reallocf(altsetting,
@@ -489,9 +484,6 @@ static int parse_interface(struct libusb_interface *usb_interface, unsigned char
       r = LIBUSB_ERROR_IO;
       goto err;
     }
-    LOGE("********** round size: %d", size);
-    LOGE("ifp->bLength: %d", ifp->bLength);
-    LOGE("ifp->bNumEndPoints: %d", ifp->bNumEndpoints);
     if (ifp->bLength > size) {
       LOGW("short intf descriptor read %d/%d",
                 size, ifp->bLength);
@@ -519,19 +511,10 @@ static int parse_interface(struct libusb_interface *usb_interface, unsigned char
     LOGE("after minus interface length: %d", size);
 
     begin = buffer;
-    LOGE("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-    for (int k = 0; k < size; k++) {
-      LOGI("%d", (int)(buffer[k]));
-    }
-    LOGE("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-    LOGE("______ header.bLength: %d, header.bDescriptorType: %d",
-             header.bLength, header.bDescriptorType);
-    header.bLength = 0x34;
-    __asm("#DESC_BEGIN");
+    header.bLength = 0xFF;
     /* Skip over any interface, class or vendor descriptors */
     while (size >= DESC_HEADER_LENGTH) {
       usbi_parse_descriptor(buffer, "bb", &header, 0);
-      // __asm("#DESC_END");
       //      usbi_err(ctx, "header.bLength: %d, header.bDescriptorType: %d",
       //               header.bLength, header.bDescriptorType);
       if (header.bLength < DESC_HEADER_LENGTH) {
@@ -591,7 +574,6 @@ static int parse_interface(struct libusb_interface *usb_interface, unsigned char
           ifp->bNumEndpoints = (uint8_t)i;
           break;;
         }
-        LOGE("endpoint_size: %d", r);
         buffer += r;
         parsed += r;
         size -= r;
