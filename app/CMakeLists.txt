@@ -6,13 +6,13 @@
 cmake_minimum_required(VERSION 3.4.1)
 
 # Sets to -O2 or -O3 will fail, but -O1 works
-add_definitions(-O2)
+add_definitions(-O3)
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
-
+# set_source_files_properties(src/main/cpp/native-lib.cpp PROPERTIES COMPILE_FLAGS -O3)
 add_library( # Sets the name of the library.
              native-lib
 
