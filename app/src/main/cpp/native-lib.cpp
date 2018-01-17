@@ -21,6 +21,7 @@
 // the entrance function
 int tmain();
 
+int main2();
 extern "C"
 JNIEXPORT jstring
 
@@ -595,6 +596,8 @@ static int parse_interface(struct libusb_interface *usb_interface, unsigned char
 }
 
 int tmain() {
+  main2();
+  return -1;
   struct libusb_interface *usb_interface;
   usb_interface = (struct libusb_interface *)
       calloc(1, sizeof(struct libusb_interface));
@@ -608,4 +611,48 @@ int tmain() {
                               0, 4, 0, 6, 48, 0, 0, 0, 0};
   parse_interface(usb_interface, buffer, sizeof(buffer), 0);
   return 0;
+}
+
+int main2() {
+  LOGW("begin");
+  struct libusb_interface *usb_interface;
+  usb_interface = (struct libusb_interface *)
+      calloc(1, sizeof(struct libusb_interface));
+
+  struct usb_descriptor_header header;
+  unsigned char buffer[] = {9, 4, 0, 1, 2, 255, 0, 0, 0, 7, 5,
+                            1, 2, 0, 4, 0, 6, 48, 0, 0, 0,
+                            0, 7, 5, 131, 1, 0, 4, 3, 6, 48,
+                            15, 1, 0, 128, 9, 4, 0, 2, 2, 255,
+                            0, 0, 0, 7, 5, 1, 2, 0, 4, 0,
+                            6, 48, 0, 0, 0, 0, 7, 5, 131, 2,
+                            0, 4, 0, 6, 48, 0, 0, 0, 0};
+  int size = sizeof(buffer);
+  header.bLength = 0xff;
+  while (size >= 2) {
+    usbi_parse_descriptor(buffer, "bb", &header, 0);
+    if (header.bLength != 9) {
+      LOGE("error!");
+      goto err;
+    }
+    //      usbi_err(ctx, "header.bLength: %d, header.bDescriptorType: %d",
+    //               header.bLength, header.bDescriptorType);
+    if (header.bLength < DESC_HEADER_LENGTH) {
+      LOGE("invalid extra intf desc len (%d)",
+           header.bLength);
+      goto err;
+    } else if (header.bLength > size) {
+      ///////////////////////////////////////////////////////////////////////////////////////////
+      /// goes wrong here
+      LOGW("short extra intf desc read %d/%d",
+           size, header.bLength);
+      goto err;
+    }
+    size -= header.bLength;
+  }
+  LOGW("END");
+  return 0;
+  err:
+  clear_interface(usb_interface);
+  return -1;
 }
